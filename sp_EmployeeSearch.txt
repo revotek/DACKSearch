@@ -1,0 +1,33 @@
+USE [DACK]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_EmployeeSearch]    Script Date: 12/13/2020 8:53:13 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO 
+CREATE PROCEDURE [dbo].[sp_EmployeeSearch] 
+	@EmployeeText varchar(200) = null, 
+	@DepartmentText varchar(200) = null, 
+	@SubDepartmentText varchar(200) = null
+AS
+BEGIN
+ 
+	SET NOCOUNT ON;
+	Declare @SQLQuery AS NVarchar(4000)
+	
+	Set @SQLQuery = ' select Employee.EmployeeId, Employee.FirstName, Employee.LastName, Employee.Bio, Employee.ProfileImage, 
+						Employee.FBProfileLink, Employee.TwitterProfileLink, SubDepartment.SubDepartmentName, Department.DepartmentName FROM Employee
+						left join SubDepartment  on employee.SubDepartmentId = SubDepartment.SubDepartmentId
+						left join Department on Department.DepartmentId = SubDepartment.DepartmentId WHERE Employee.Deleted = 0'
+
+	If @EmployeeText IS NOT NULL
+	Set @SQLQuery = @SQLQuery + 'AND (Employee.FirstName LIKE ''%' + @EmployeeText + '%'' ) OR (Employee.LastName LIKE ''%' + @EmployeeText + '%'')'
+		
+	If @DepartmentText IS NOT NULL
+	Set @SQLQuery = @SQLQuery + 'AND (Department.DepartmentName LIKE ''%' +  @DepartmentText + '%'') '
+
+	IF @SubDepartmentText IS NOT NULL
+	Set @SQLQuery = @SQLQuery + 'AND (SubDepartment.SubDepartmentName LIKE ''%' + @SubDepartmentText + '%'')'
+
+	Execute sp_Executesql @SQLQuery
+END
